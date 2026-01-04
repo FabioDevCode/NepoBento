@@ -1,22 +1,44 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import draggable from 'vuedraggable';
 import { useBentoStore } from '@/stores/bento';
 import BentoBlock from '@/components/blocks/BentoBlock.vue';
 import { Plus } from 'lucide-vue-next';
+import type { Block } from '@/types';
 
 const store = useBentoStore();
 
-const blocks = computed({
-    get: () => store.blocks,
-    set: (value) => store.reorderBlocks(value),
+// Copie locale des blocs pour le drag & drop
+const localBlocks = ref<Block[]>([...store.blocks]);
+
+// Synchroniser quand le store change (ajout, suppression, etc.)
+watch(() => store.blocks, (newBlocks) => {
+    localBlocks.value = [...newBlocks];
+}, { deep: true });
+
+// Mettre à jour le store quand le drag & drop est terminé
+function onDragEnd() {
+    store.reorderBlocks([...localBlocks.value]);
+}
+
+// Calculer le nombre de rows occupées par les blocs
+const occupiedRows = computed(() => {
+    if (localBlocks.value.length === 0) return 0;
+    return Math.max(...localBlocks.value.map(b => b.position.y + b.size.height));
+});
+
+// Nombre minimum de rows à afficher
+const minRows = computed(() => {
+    if (localBlocks.value.length === 0) return 4;
+    return occupiedRows.value + 8;
 });
 
 const gridStyle = computed(() => ({
     display: 'grid',
     gridTemplateColumns: `repeat(${store.grid.columns}, 1fr)`,
-    gap: `${store.grid.gap}px`,
-    gridAutoRows: `${store.grid.rowHeight}px`,
+    gap: `32px`,
+    gridAutoRows: `68px`,
+    gridTemplateRows: `repeat(${minRows.value}, 68px)`,
 }));
 
 function handleSelect(id: string) {
@@ -40,8 +62,8 @@ function handleDuplicate(id: string) {
     >
         <!-- Mode Éditeur avec drag & drop -->
         <draggable
-            v-if="blocks.length > 0"
-            v-model="blocks"
+            v-if="localBlocks.length > 0"
+            v-model="localBlocks"
             item-key="id"
             :style="gridStyle"
             ghost-class="ghost"
@@ -49,6 +71,7 @@ function handleDuplicate(id: string) {
             drag-class="drag"
             handle=".drag-handle"
             animation="200"
+            @end="onDragEnd"
         >
         <template #item="{ element }">
             <BentoBlock

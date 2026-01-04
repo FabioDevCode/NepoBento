@@ -101,10 +101,13 @@ function handleClick() {
     </div>
 
     <!-- Contenu du bloc selon le type -->
-    <div class="h-full w-full p-4 flex flex-col items-center justify-center text-center">
+    <div class="block-content h-full w-full flex items-center" :class="{
+      'flex-row justify-start gap-3': block.type === 'link' || block.type === 'social',
+      'flex-col justify-center text-center': block.type === 'text' || block.type === 'image'
+    }">
       <!-- Link -->
       <template v-if="block.type === 'link'">
-        <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center mb-3">
+        <div class="w-10 h-10 shrink-0 rounded-xl bg-gray-100 flex items-center justify-center">
           <Link class="w-5 h-5 text-gray-600" />
         </div>
         <span class="font-medium text-gray-900 text-sm">{{ block.content.title || 'Lien' }}</span>
@@ -112,16 +115,18 @@ function handleClick() {
 
       <!-- Social -->
       <template v-else-if="block.type === 'social'">
-        <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mb-2">
-          <component :is="socialIcon" class="w-6 h-6 text-gray-700" />
+        <div class="w-10 h-10 shrink-0 rounded-xl bg-gray-100 flex items-center justify-center">
+          <component :is="socialIcon" class="w-5 h-5 text-gray-700" />
         </div>
-        <span class="text-xs text-gray-500">{{ block.content.username || block.content.platform || 'Social' }}</span>
+        <span class="text-sm text-gray-700">{{ block.content.username || block.content.platform || 'Social' }}</span>
       </template>
 
       <!-- Text -->
       <template v-else-if="block.type === 'text'">
-        <h4 v-if="block.content.title" class="font-semibold text-gray-900 mb-1 text-sm">{{ block.content.title }}</h4>
-        <p class="text-sm text-gray-600 line-clamp-3">{{ block.content.text || 'Texte...' }}</p>
+        <div class="w-full text-left">
+          <h4 v-if="block.content.title" class="font-semibold text-gray-900 text-base">{{ block.content.title }}</h4>
+          <p v-if="block.content.text" class="text-sm text-gray-600 mt-1 line-clamp-2">{{ block.content.text }}</p>
+        </div>
       </template>
 
       <!-- Image -->
@@ -143,13 +148,17 @@ function handleClick() {
 
 <style scoped>
 .bento-block {
-  min-height: 100px;
+  min-height: 68px;
   border-radius: 12px;
 }
 
-.line-clamp-3 {
+.block-content {
+  padding: 10px;
+}
+
+.line-clamp-2 {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

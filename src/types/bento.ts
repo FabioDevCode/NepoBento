@@ -24,18 +24,18 @@ export interface BlockContent {
   // Common
   title?: string;
   description?: string;
-  
+
   // Link & Social
   url?: string;
   icon?: string;
-  
+
   // Text
   text?: string;
-  
+
   // Image
   src?: string;
   alt?: string;
-  
+
   // Social specific
   platform?: 'twitter' | 'instagram' | 'linkedin' | 'github' | 'youtube' | 'tiktok' | 'facebook' | 'other';
   username?: string;
@@ -108,9 +108,9 @@ export const defaultTheme: Theme = {
 
 export const defaultGrid: Grid = {
   columns: 3,
-  gap: 16,
+  gap: 32,
   maxWidth: '900px',
-  rowHeight: 120,
+  rowHeight: 68,
 };
 
 export const defaultMetadata: Metadata = {

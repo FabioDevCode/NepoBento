@@ -22,7 +22,7 @@ export const useBentoStore = defineStore('bento', () => {
   const grid = computed(() => config.value.grid);
   const metadata = computed(() => config.value.metadata);
   const profile = computed(() => config.value.profile);
-  
+
   const selectedBlock = computed(() => {
     if (!selectedBlockId.value) return null;
     return config.value.blocks.find(b => b.id === selectedBlockId.value) || null;
@@ -98,7 +98,7 @@ export const useBentoStore = defineStore('bento', () => {
   function duplicateBlock(id: string): Block | null {
     const block = config.value.blocks.find(b => b.id === id);
     if (!block) return null;
-    
+
     const newBlock: Block = {
       ...JSON.parse(JSON.stringify(block)),
       id: generateId(),
@@ -174,7 +174,7 @@ export const useBentoStore = defineStore('bento', () => {
   }
 
   function resetConfig(): void {
-    config.value = { 
+    config.value = {
       ...defaultBentoConfig,
       profile: { ...defaultProfile },
       metadata: {
@@ -201,11 +201,12 @@ export const useBentoStore = defineStore('bento', () => {
       case 'image':
         return { width: 2, height: 2 };
       case 'text':
-        return { width: 2, height: 1 };
+        return { width: 4, height: 1 };
       case 'link':
       case 'social':
+        return { width: 2, height: 1 };
       default:
-        return { width: 1, height: 1 };
+        return { width: 2, height: 1 };
     }
   }
 
