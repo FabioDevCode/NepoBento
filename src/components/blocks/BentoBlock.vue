@@ -74,7 +74,7 @@ function handleClick() {
     <!-- Handle de drag (mode éditeur) -->
     <div 
       v-if="!isPreview"
-      class="drag-handle absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-100"
+      class="drag-handle absolute top-2 left-2 opacity-100 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-100 z-10"
     >
       <GripVertical class="w-4 h-4 text-gray-400" />
     </div>

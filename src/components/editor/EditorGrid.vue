@@ -101,16 +101,20 @@ watch(gridCells, (newCells) => {
 }, { immediate: true });
 
 // Vérifier si un bloc peut tenir à une position donnée
-function canBlockFitAt(blockId: string, blockSize: Size, targetRow: number, targetCol: number): boolean {
+// excludeIds permet d'exclure plusieurs blocs de la vérification (utile pour les échanges)
+function canBlockFitAt(blockId: string, blockSize: Size, targetRow: number, targetCol: number, excludeIds: string[] = []): boolean {
     const columns = store.grid.columns;
 
     // Vérifier les limites de la grille
     if (targetCol + blockSize.width > columns) return false;
     if (targetCol < 0 || targetRow < 0) return false;
 
+    // Liste des IDs à exclure (le bloc lui-même + les IDs passés en paramètre)
+    const idsToExclude = new Set([blockId, ...excludeIds]);
+
     // Vérifier les collisions avec d'autres blocs
     for (const block of localBlocks.value) {
-        if (block.id === blockId) continue; // Ignorer le bloc qu'on déplace
+        if (idsToExclude.has(block.id)) continue; // Ignorer les blocs exclus
 
         // Vérifier si les rectangles se chevauchent
         const blockLeft = block.position.x;
@@ -137,11 +141,21 @@ function onDragEnd(evt: any) {
     const { oldIndex, newIndex } = evt;
     if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return;
 
-    const draggedCell = gridCells.value[oldIndex];
-    const targetCell = gridCells.value[newIndex];
+    // Utiliser les cellules AVANT le réordonnancement de vuedraggable
+    // On doit récupérer les cellules depuis gridCells (état original)
+    const originalCells = gridCells.value;
+    const draggedCell = originalCells[oldIndex];
+    const targetCell = originalCells[newIndex];
 
-    if (!draggedCell || draggedCell.type !== 'block' || !draggedCell.block) return;
-    if (!targetCell) return;
+    if (!draggedCell || draggedCell.type !== 'block' || !draggedCell.block) {
+        // Resynchroniser localCells avec gridCells
+        localCells.value = [...gridCells.value];
+        return;
+    }
+    if (!targetCell) {
+        localCells.value = [...gridCells.value];
+        return;
+    }
 
     const block = draggedCell.block;
 
@@ -152,6 +166,8 @@ function onDragEnd(evt: any) {
                 x: targetCell.col,
                 y: targetCell.row,
             });
+        } else {
+            localCells.value = [...gridCells.value];
         }
     }
     // Si on drop sur un autre bloc, échanger les positions si possible
@@ -160,14 +176,18 @@ function onDragEnd(evt: any) {
         const draggedPos = { x: block.position.x, y: block.position.y };
         const targetPos = { x: targetBlock.position.x, y: targetBlock.position.y };
 
-        // Vérifier si l'échange est possible
-        const canDraggedFit = canBlockFitAt(block.id, block.size, targetPos.y, targetPos.x);
-        const canTargetFit = canBlockFitAt(targetBlock.id, targetBlock.size, draggedPos.y, draggedPos.x);
+        // Vérifier si l'échange est possible (exclure les deux blocs impliqués)
+        const canDraggedFit = canBlockFitAt(block.id, block.size, targetPos.y, targetPos.x, [targetBlock.id]);
+        const canTargetFit = canBlockFitAt(targetBlock.id, targetBlock.size, draggedPos.y, draggedPos.x, [block.id]);
 
         if (canDraggedFit && canTargetFit) {
             store.updateBlockPosition(block.id, targetPos);
             store.updateBlockPosition(targetBlock.id, draggedPos);
+        } else {
+            localCells.value = [...gridCells.value];
         }
+    } else {
+        localCells.value = [...gridCells.value];
     }
 }
 
@@ -222,6 +242,8 @@ function getCellStyle(cell: GridCell) {
             chosen-class="chosen"
             drag-class="drag"
             handle=".drag-handle"
+            :filter="'.placeholder-cell'"
+            :preventOnFilter="false"
             animation="200"
             @end="onDragEnd"
         >
