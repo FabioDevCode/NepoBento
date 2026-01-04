@@ -87,7 +87,7 @@ function handleAvatarUpload(event: Event) {
                     ref="nameInput"
                     type="text"
                     :value="profile.name"
-                    class="w-full text-center text-xl font-semibold text-gray-900 bg-transparent border-b-2 border-blue-500 focus:outline-none px-2 py-1"
+                    class="w-full text-start text-xl font-semibold text-gray-900 bg-transparent border-b-2 border-blue-500 focus:outline-none px-2 py-1"
                     @blur="saveName"
                     @keydown.enter="($event.target as HTMLInputElement).blur()"
                 />
@@ -133,8 +133,13 @@ function handleAvatarUpload(event: Event) {
 
 <style scoped>
 .profile-column {
-    background-color: transparent;
+    background-color: #F9FAFB;
     padding: 60px 60px 0px 60px;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    max-height: 100vh;
+    overflow-y: auto;
 }
 
 #avatar {

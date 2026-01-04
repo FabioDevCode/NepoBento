@@ -61,13 +61,56 @@ export const useBentoStore = defineStore('bento', () => {
     saveToStorage();
   }, { deep: true });
 
+  // Trouver la première position disponible pour un bloc de taille donnée
+  function findFirstAvailablePosition(blockSize: Size): Position {
+    const columns = config.value.grid.columns;
+    const blocks = config.value.blocks;
+    
+    // Créer une map des cellules occupées
+    const occupiedCells = new Set<string>();
+    blocks.forEach(block => {
+      for (let row = block.position.y; row < block.position.y + block.size.height; row++) {
+        for (let col = block.position.x; col < block.position.x + block.size.width; col++) {
+          occupiedCells.add(`${row}-${col}`);
+        }
+      }
+    });
+    
+    // Chercher la première position où le bloc peut rentrer
+    for (let row = 0; row < 100; row++) { // Limite raisonnable
+      for (let col = 0; col <= columns - blockSize.width; col++) {
+        // Vérifier si toutes les cellules nécessaires sont libres
+        let canFit = true;
+        for (let r = row; r < row + blockSize.height && canFit; r++) {
+          for (let c = col; c < col + blockSize.width && canFit; c++) {
+            if (occupiedCells.has(`${r}-${c}`)) {
+              canFit = false;
+            }
+          }
+        }
+        if (canFit) {
+          return { x: col, y: row };
+        }
+      }
+    }
+    
+    // Fallback: mettre en dessous de tout
+    const maxY = blocks.length > 0 
+      ? Math.max(...blocks.map(b => b.position.y + b.size.height))
+      : 0;
+    return { x: 0, y: maxY };
+  }
+
   // Actions - Blocs
   function addBlock(type: BlockType, position?: Position, size?: Size): Block {
+    const blockSize = size || getDefaultSizeForType(type);
+    const blockPosition = position || findFirstAvailablePosition(blockSize);
+    
     const newBlock: Block = {
       id: generateId(),
       type,
-      position: position || { x: 0, y: config.value.blocks.length },
-      size: size || getDefaultSizeForType(type),
+      position: blockPosition,
+      size: blockSize,
       content: getDefaultContentForType(type),
     };
     config.value.blocks.push(newBlock);
@@ -114,6 +157,13 @@ export const useBentoStore = defineStore('bento', () => {
 
   function reorderBlocks(newOrder: Block[]): void {
     config.value.blocks = newOrder;
+  }
+
+  function updateBlockPosition(id: string, position: Position): void {
+    const block = config.value.blocks.find(b => b.id === id);
+    if (block) {
+      block.position = { ...position };
+    }
   }
 
   // Actions - Thème
@@ -199,8 +249,10 @@ export const useBentoStore = defineStore('bento', () => {
   function getDefaultSizeForType(type: BlockType): Size {
     switch (type) {
       case 'image':
-        return { width: 2, height: 2 };
+        return { width: 2, height: 4 };
       case 'text':
+        return { width: 2, height: 4 };
+      case 'title':
         return { width: 4, height: 1 };
       case 'link':
       case 'social':
@@ -226,8 +278,11 @@ export const useBentoStore = defineStore('bento', () => {
         };
       case 'text':
         return {
-          title: 'Titre',
           text: 'Votre texte ici...',
+        };
+      case 'title':
+        return {
+          title: 'Titre',
         };
       case 'image':
         return {
@@ -259,6 +314,7 @@ export const useBentoStore = defineStore('bento', () => {
     deleteBlock,
     duplicateBlock,
     reorderBlocks,
+    updateBlockPosition,
     
     // Actions - Profile
     updateProfile,

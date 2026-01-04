@@ -1,7 +1,7 @@
 // Types pour l'éditeur Bento
 
 // Les blocs éditables (sans profile qui est géré séparément)
-export type BlockType = 'link' | 'social' | 'text' | 'image';
+export type BlockType = 'link' | 'social' | 'text' | 'image' | 'title';
 
 export interface Position {
   x: number;
@@ -107,7 +107,7 @@ export const defaultTheme: Theme = {
 };
 
 export const defaultGrid: Grid = {
-  columns: 3,
+  columns: 4,
   gap: 32,
   maxWidth: '900px',
   rowHeight: 68,

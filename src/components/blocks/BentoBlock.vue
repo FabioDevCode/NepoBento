@@ -103,7 +103,9 @@ function handleClick() {
     <!-- Contenu du bloc selon le type -->
     <div class="block-content h-full w-full flex items-center" :class="{
       'flex-row justify-start gap-3': block.type === 'link' || block.type === 'social',
-      'flex-col justify-center text-center': block.type === 'text' || block.type === 'image'
+      'flex-col justify-center text-center': block.type === 'image',
+      'flex-col justify-start': block.type === 'text',
+      'flex-row justify-start': block.type === 'title'
     }">
       <!-- Link -->
       <template v-if="block.type === 'link'">
@@ -123,10 +125,14 @@ function handleClick() {
 
       <!-- Text -->
       <template v-else-if="block.type === 'text'">
-        <div class="w-full text-left">
-          <h4 v-if="block.content.title" class="font-semibold text-gray-900 text-base">{{ block.content.title }}</h4>
-          <p v-if="block.content.text" class="text-sm text-gray-600 mt-1 line-clamp-2">{{ block.content.text }}</p>
+        <div class="w-full h-full text-left overflow-auto">
+          <p class="text-sm text-gray-600">{{ block.content.text || 'Votre texte ici...' }}</p>
         </div>
+      </template>
+
+      <!-- Title -->
+      <template v-else-if="block.type === 'title'">
+        <h2 class="w-full text-left font-bold text-gray-900 text-xl">{{ block.content.title || 'Titre' }}</h2>
       </template>
 
       <!-- Image -->
