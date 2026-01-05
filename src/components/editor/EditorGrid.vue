@@ -4,7 +4,7 @@ import draggable from 'vuedraggable';
 import { useBentoStore } from '@/stores/bento';
 import BentoBlock from '@/components/blocks/BentoBlock.vue';
 import { Plus } from 'lucide-vue-next';
-import type { Block, Size } from '@/types';
+import type { Block } from '@/types';
 
 const store = useBentoStore();
 
@@ -100,55 +100,159 @@ watch(gridCells, (newCells) => {
     localCells.value = [...newCells];
 }, { immediate: true });
 
-// Vérifier si un bloc peut tenir à une position donnée
-// excludeIds permet d'exclure plusieurs blocs de la vérification (utile pour les échanges)
-function canBlockFitAt(blockId: string, blockSize: Size, targetRow: number, targetCol: number, excludeIds: string[] = []): boolean {
-    const columns = store.grid.columns;
+// ============================================
+// SYSTÈME DE PLACEMENT INTELLIGENT DES BLOCS
+// ============================================
 
-    // Vérifier les limites de la grille
-    if (targetCol + blockSize.width > columns) return false;
-    if (targetCol < 0 || targetRow < 0) return false;
+interface BlockPosition {
+    id: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
 
-    // Liste des IDs à exclure (le bloc lui-même + les IDs passés en paramètre)
-    const idsToExclude = new Set([blockId, ...excludeIds]);
+// Vérifier si deux rectangles se chevauchent
+function rectanglesOverlap(a: BlockPosition, b: BlockPosition): boolean {
+    const aLeft = a.x;
+    const aRight = a.x + a.width;
+    const aTop = a.y;
+    const aBottom = a.y + a.height;
 
-    // Vérifier les collisions avec d'autres blocs
-    for (const block of localBlocks.value) {
-        if (idsToExclude.has(block.id)) continue; // Ignorer les blocs exclus
+    const bLeft = b.x;
+    const bRight = b.x + b.width;
+    const bTop = b.y;
+    const bBottom = b.y + b.height;
 
-        // Vérifier si les rectangles se chevauchent
-        const blockLeft = block.position.x;
-        const blockRight = block.position.x + block.size.width;
-        const blockTop = block.position.y;
-        const blockBottom = block.position.y + block.size.height;
+    const overlapsX = aLeft < bRight && aRight > bLeft;
+    const overlapsY = aTop < bBottom && aBottom > bTop;
 
-        const targetLeft = targetCol;
-        const targetRight = targetCol + blockSize.width;
-        const targetTop = targetRow;
-        const targetBottom = targetRow + blockSize.height;
+    return overlapsX && overlapsY;
+}
 
-        const overlapsX = targetLeft < blockRight && targetRight > blockLeft;
-        const overlapsY = targetTop < blockBottom && targetBottom > blockTop;
+// Calculer la nouvelle position pour un bloc décalé (le pousser vers le bas)
+function pushBlockDown(
+    blockToMove: BlockPosition,
+    pusher: BlockPosition
+): BlockPosition {
+    // Décaler le bloc juste en dessous du "pusher"
+    return {
+        ...blockToMove,
+        y: pusher.y + pusher.height,
+    };
+}
 
-        if (overlapsX && overlapsY) return false;
+// Réorganiser tous les blocs après avoir placé un bloc à une nouvelle position
+function reorganizeBlocks(
+    movedBlockId: string,
+    newX: number,
+    newY: number,
+    allBlocks: Block[]
+): Map<string, { x: number; y: number }> {
+    // Créer une copie de travail des positions
+    const workingPositions = new Map<string, BlockPosition>();
+
+    allBlocks.forEach(block => {
+        if (block.id === movedBlockId) {
+            // Le bloc qu'on déplace va à sa nouvelle position
+            workingPositions.set(block.id, {
+                id: block.id,
+                x: newX,
+                y: newY,
+                width: block.size.width,
+                height: block.size.height,
+            });
+        } else {
+            workingPositions.set(block.id, {
+                id: block.id,
+                x: block.position.x,
+                y: block.position.y,
+                width: block.size.width,
+                height: block.size.height,
+            });
+        }
+    });
+
+    // Résoudre les collisions de manière itérative
+    let hasCollisions = true;
+    let iterations = 0;
+    const maxIterations = 100; // Sécurité anti-boucle infinie
+
+    while (hasCollisions && iterations < maxIterations) {
+        hasCollisions = false;
+        iterations++;
+
+        // Le bloc qu'on a déplacé est prioritaire
+        const movedBlock = workingPositions.get(movedBlockId);
+        if (!movedBlock) break;
+
+        // Vérifier les collisions avec le bloc déplacé
+        const allPositions = Array.from(workingPositions.values());
+
+        for (const otherBlock of allPositions) {
+            if (otherBlock.id === movedBlockId) continue;
+
+            if (rectanglesOverlap(movedBlock, otherBlock)) {
+                hasCollisions = true;
+
+                // Pousser l'autre bloc vers le bas
+                const newPos = pushBlockDown(otherBlock, movedBlock);
+                workingPositions.set(otherBlock.id, newPos);
+            }
+        }
+
+        // Maintenant vérifier les collisions entre les autres blocs (cascade)
+        const sortedBlocks = Array.from(workingPositions.values())
+            .sort((a, b) => a.y - b.y || a.x - b.x);
+
+        for (let i = 0; i < sortedBlocks.length; i++) {
+            const blockA = sortedBlocks[i];
+            if (!blockA || blockA.id === movedBlockId) continue;
+
+            for (let j = i + 1; j < sortedBlocks.length; j++) {
+                const blockB = sortedBlocks[j];
+                if (!blockB || blockB.id === movedBlockId) continue;
+
+                const currentA = workingPositions.get(blockA.id);
+                const currentB = workingPositions.get(blockB.id);
+
+                if (currentA && currentB && rectanglesOverlap(currentA, currentB)) {
+                    hasCollisions = true;
+                    // Le bloc B (plus bas dans le tri) est poussé vers le bas
+                    const newPos = pushBlockDown(currentB, currentA);
+                    workingPositions.set(blockB.id, newPos);
+                }
+            }
+        }
     }
 
-    return true;
+    // Retourner les nouvelles positions
+    const result = new Map<string, { x: number; y: number }>();
+    workingPositions.forEach((pos, id) => {
+        result.set(id, { x: pos.x, y: pos.y });
+    });
+
+    return result;
+}
+
+// Vérifier si la position est valide (dans les limites de la grille)
+function isValidPosition(x: number, y: number, width: number, columns: number): boolean {
+    return x >= 0 && y >= 0 && x + width <= columns;
 }
 
 // Gérer le drop d'un bloc
 function onDragEnd(evt: any) {
     const { oldIndex, newIndex } = evt;
-    if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) return;
+    if (oldIndex === undefined || newIndex === undefined || oldIndex === newIndex) {
+        localCells.value = [...gridCells.value];
+        return;
+    }
 
-    // Utiliser les cellules AVANT le réordonnancement de vuedraggable
-    // On doit récupérer les cellules depuis gridCells (état original)
     const originalCells = gridCells.value;
     const draggedCell = originalCells[oldIndex];
     const targetCell = originalCells[newIndex];
 
     if (!draggedCell || draggedCell.type !== 'block' || !draggedCell.block) {
-        // Resynchroniser localCells avec gridCells
         localCells.value = [...gridCells.value];
         return;
     }
@@ -158,37 +262,54 @@ function onDragEnd(evt: any) {
     }
 
     const block = draggedCell.block;
+    const columns = store.grid.columns;
 
-    // Si on drop sur un placeholder, vérifier si le bloc peut tenir
+    // Déterminer la position cible
+    let targetX: number;
+    let targetY: number;
+
     if (targetCell.type === 'placeholder') {
-        if (canBlockFitAt(block.id, block.size, targetCell.row, targetCell.col)) {
-            store.updateBlockPosition(block.id, {
-                x: targetCell.col,
-                y: targetCell.row,
-            });
-        } else {
-            localCells.value = [...gridCells.value];
-        }
-    }
-    // Si on drop sur un autre bloc, échanger les positions si possible
-    else if (targetCell.type === 'block' && targetCell.block) {
-        const targetBlock = targetCell.block;
-        const draggedPos = { x: block.position.x, y: block.position.y };
-        const targetPos = { x: targetBlock.position.x, y: targetBlock.position.y };
-
-        // Vérifier si l'échange est possible (exclure les deux blocs impliqués)
-        const canDraggedFit = canBlockFitAt(block.id, block.size, targetPos.y, targetPos.x, [targetBlock.id]);
-        const canTargetFit = canBlockFitAt(targetBlock.id, targetBlock.size, draggedPos.y, draggedPos.x, [block.id]);
-
-        if (canDraggedFit && canTargetFit) {
-            store.updateBlockPosition(block.id, targetPos);
-            store.updateBlockPosition(targetBlock.id, draggedPos);
-        } else {
-            localCells.value = [...gridCells.value];
-        }
+        targetX = targetCell.col;
+        targetY = targetCell.row;
+    } else if (targetCell.type === 'block' && targetCell.block) {
+        // On prend la position du bloc cible
+        targetX = targetCell.block.position.x;
+        targetY = targetCell.block.position.y;
     } else {
         localCells.value = [...gridCells.value];
+        return;
     }
+
+    // Vérifier que la position est valide (dans les limites)
+    if (!isValidPosition(targetX, targetY, block.size.width, columns)) {
+        // Essayer d'ajuster la position X si le bloc dépasse à droite
+        if (targetX + block.size.width > columns) {
+            targetX = columns - block.size.width;
+        }
+        if (targetX < 0) {
+            localCells.value = [...gridCells.value];
+            return;
+        }
+    }
+
+    // Réorganiser tous les blocs
+    const newPositions = reorganizeBlocks(
+        block.id,
+        targetX,
+        targetY,
+        [...localBlocks.value]
+    );
+
+    // Appliquer les nouvelles positions
+    newPositions.forEach((pos, blockId) => {
+        const originalBlock = localBlocks.value.find(b => b.id === blockId);
+        if (originalBlock) {
+            const originalPos = originalBlock.position;
+            if (originalPos.x !== pos.x || originalPos.y !== pos.y) {
+                store.updateBlockPosition(blockId, pos);
+            }
+        }
+    });
 }
 
 const gridStyle = computed(() => ({
