@@ -13,8 +13,6 @@ import {
   Image as ImageIcon,
   Share2,
   Trash2,
-  Copy,
-  GripVertical
 } from 'lucide-vue-next';
 
 const props = defineProps<{
@@ -26,7 +24,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'select'): void;
   (e: 'delete'): void;
-  (e: 'duplicate'): void;
 }>();
 
 const store = useBentoStore();
@@ -62,35 +59,21 @@ function handleClick() {
 
 <template>
   <div 
-    class="bento-block group relative bg-white border border-gray-100 shadow-sm transition-all duration-200 cursor-pointer overflow-hidden"
+    class="bento-block group relative bg-white border border-gray-100 shadow-sm transition-all duration-200 overflow-hidden"
     :class="{
       'ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-50': isSelected,
-      'hover:shadow-md hover:border-gray-200': !isSelected && !isPreview,
-      'hover:scale-[1.02] hover:shadow-lg': isPreview,
+      'hover:shadow-md hover:border-gray-200 cursor-grab active:cursor-grabbing': !isSelected && !isPreview,
+      'cursor-grab active:cursor-grabbing': isSelected && !isPreview,
+      'cursor-pointer hover:scale-[1.02] hover:shadow-lg': isPreview,
     }"
     :style="blockStyle"
     @click="handleClick"
   >
-    <!-- Handle de drag (mode éditeur) -->
-    <div 
-      v-if="!isPreview"
-      class="drag-handle absolute top-2 left-2 opacity-100 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-100 z-10"
-    >
-      <GripVertical class="w-4 h-4 text-gray-400" />
-    </div>
-
     <!-- Actions (mode éditeur) -->
     <div 
       v-if="!isPreview && isSelected"
-      class="absolute top-2 right-2 flex gap-1"
+      class="absolute top-2 right-2 flex gap-1 z-10"
     >
-      <button 
-        class="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
-        @click.stop="emit('duplicate')"
-        title="Dupliquer"
-      >
-        <Copy class="w-3.5 h-3.5" />
-      </button>
       <button 
         class="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 transition-colors"
         @click.stop="emit('delete')"
@@ -160,12 +143,5 @@ function handleClick() {
 
 .block-content {
   padding: 10px;
-}
-
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 </style>

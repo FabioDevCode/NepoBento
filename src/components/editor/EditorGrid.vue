@@ -328,10 +328,6 @@ function handleDelete(id: string) {
     store.deleteBlock(id);
 }
 
-function handleDuplicate(id: string) {
-    store.duplicateBlock(id);
-}
-
 // Style pour positionner chaque cellule dans la grille
 function getCellStyle(cell: GridCell) {
     if (cell.type === 'block' && cell.block) {
@@ -362,7 +358,6 @@ function getCellStyle(cell: GridCell) {
             ghost-class="ghost"
             chosen-class="chosen"
             drag-class="drag"
-            handle=".drag-handle"
             :filter="'.placeholder-cell'"
             :preventOnFilter="false"
             animation="200"
@@ -380,7 +375,6 @@ function getCellStyle(cell: GridCell) {
                     class="h-full"
                     @select="handleSelect(element.block.id)"
                     @delete="handleDelete(element.block.id)"
-                    @duplicate="handleDuplicate(element.block.id)"
                 />
             </div>
         </template>
