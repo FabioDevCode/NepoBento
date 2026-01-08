@@ -226,6 +226,11 @@ function reorganizeBlocks(
         }
     }
 
+    // ============================================
+    // COMPACTAGE : Remonter les blocs vers le haut
+    // ============================================
+    compactBlocksUp(workingPositions);
+
     // Retourner les nouvelles positions
     const result = new Map<string, { x: number; y: number }>();
     workingPositions.forEach((pos, id) => {
@@ -233,6 +238,66 @@ function reorganizeBlocks(
     });
 
     return result;
+}
+
+// Compacter les blocs vers le haut pour combler les espaces vides
+function compactBlocksUp(
+    workingPositions: Map<string, BlockPosition>
+): void {
+    let hasChanges = true;
+    let iterations = 0;
+    const maxIterations = 100;
+
+    while (hasChanges && iterations < maxIterations) {
+        hasChanges = false;
+        iterations++;
+
+        // Trier les blocs par position Y (du plus haut au plus bas)
+        // Tous les blocs peuvent remonter, y compris celui qu'on vient de déplacer
+        const sortedBlocks = Array.from(workingPositions.values())
+            .sort((a, b) => a.y - b.y || a.x - b.x);
+
+        for (const block of sortedBlocks) {
+            const currentPos = workingPositions.get(block.id);
+            if (!currentPos || currentPos.y === 0) continue;
+
+            // Essayer de remonter le bloc le plus haut possible
+            let bestY = currentPos.y;
+
+            // Tester chaque position de Y=0 jusqu'à la position actuelle
+            for (let testY = 0; testY < currentPos.y; testY++) {
+                const testPosition: BlockPosition = {
+                    ...currentPos,
+                    y: testY,
+                };
+
+                // Vérifier s'il y a collision avec d'autres blocs
+                let canMove = true;
+                for (const otherBlock of workingPositions.values()) {
+                    if (otherBlock.id === block.id) continue;
+
+                    if (rectanglesOverlap(testPosition, otherBlock)) {
+                        canMove = false;
+                        break;
+                    }
+                }
+
+                if (canMove) {
+                    bestY = testY;
+                    break; // On prend la position la plus haute possible
+                }
+            }
+
+            // Si on peut remonter, mettre à jour la position
+            if (bestY < currentPos.y) {
+                workingPositions.set(block.id, {
+                    ...currentPos,
+                    y: bestY,
+                });
+                hasChanges = true;
+            }
+        }
+    }
 }
 
 // Vérifier si la position est valide (dans les limites de la grille)
