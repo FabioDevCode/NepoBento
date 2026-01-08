@@ -5,7 +5,6 @@ import { useBentoStore } from '@/stores/bento';
 import { useBentoStorage } from '@/composables';
 import {
     Link,
-    Share2,
     Type,
     Heading2,
     Image as ImageIcon,
@@ -28,7 +27,6 @@ const notification = ref<{ type: 'success' | 'error'; message: string } | null>(
 
 const blockTypes: { type: BlockType; label: string; icon: typeof Link }[] = [
     { type: 'link', label: 'Lien', icon: Link },
-    { type: 'social', label: 'Social', icon: Share2 },
     { type: 'title', label: 'Titre', icon: Heading2 },
     { type: 'text', label: 'Texte', icon: Type },
     { type: 'image', label: 'Image', icon: ImageIcon },
@@ -103,7 +101,7 @@ function showNotification(type: 'success' | 'error', message: string) {
                 v-for="blockType in blockTypes"
                 :key="blockType.type"
                 @click="addBlock(blockType.type)"
-                class="tooltip p-3 flex items-center justify-center rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-all duration-150"
+                class="tooltip flex items-center justify-center rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-all duration-150"
                 :data-tooltip="blockType.label"
                 >
                     <component :is="blockType.icon" class="w-4 h-4" />
@@ -111,7 +109,7 @@ function showNotification(type: 'success' | 'error', message: string) {
             </div>
 
             <!-- Séparateur -->
-            <div class="w-px h-full bg-gray-200 mx-4" />
+            <div class="w-px h-full bg-gray-200 mx-2" />
 
             <!-- Actions système -->
             <div id="actions" class="flex items-center gap-1">
@@ -125,7 +123,7 @@ function showNotification(type: 'success' | 'error', message: string) {
 
                 <button
                     @click="triggerImport"
-                    class="tooltip p-3 flex items-center justify-center rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-all duration-150"
+                    class="tooltip flex items-center justify-center rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-all duration-150"
                     data-tooltip="Importer"
                 >
                     <Upload class="w-4 h-4" />
@@ -133,7 +131,7 @@ function showNotification(type: 'success' | 'error', message: string) {
 
                 <button
                     @click="handleExport"
-                    class="tooltip p-3 flex items-center justify-center rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-all duration-150"
+                    class="tooltip flex items-center justify-center rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-all duration-150"
                     data-tooltip="Exporter"
                 >
                     <Download class="w-4 h-4" />
@@ -141,7 +139,7 @@ function showNotification(type: 'success' | 'error', message: string) {
 
                 <button
                     @click="handleReset"
-                    class="tooltip p-3 flex items-center justify-center rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-all duration-150"
+                    class="tooltip flex items-center justify-center rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-all duration-150"
                     data-tooltip="Réinitialiser"
                 >
                     <RotateCcw class="w-4 h-4" />
@@ -149,7 +147,7 @@ function showNotification(type: 'success' | 'error', message: string) {
 
                 <button
                     @click="handleClearAll"
-                    class="tooltip p-3 flex items-center justify-center rounded-md hover:bg-red-50 text-gray-600 hover:text-red-600 transition-all duration-150"
+                    class="tooltip flex items-center justify-center rounded-md hover:bg-red-50 text-gray-600 hover:text-red-600 transition-all duration-150"
                     data-tooltip="Tout supprimer"
                 >
                     <Trash2 class="w-4 h-4" />
@@ -161,7 +159,7 @@ function showNotification(type: 'success' | 'error', message: string) {
 
             <button
                 @click="goToPreview"
-                class="tooltip p-3 flex items-center justify-center rounded-md bg-gray-900 hover:bg-gray-800 text-white transition-all duration-150"
+                class="tooltip flex items-center justify-center rounded-md bg-gray-900 hover:bg-gray-800 text-white transition-all duration-150"
                 data-tooltip="Aperçu"
             >
                 <Eye class="w-4 h-4" />

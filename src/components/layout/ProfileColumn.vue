@@ -87,13 +87,13 @@ function handleAvatarUpload(event: Event) {
                     ref="nameInput"
                     type="text"
                     :value="profile.name"
-                    class="w-full text-start text-xl font-semibold text-gray-900 bg-transparent border-b-2 border-blue-500 focus:outline-none px-2 py-1"
+                    class="w-full text-start text-xl font-semibold text-gray-900 bg-transparent border-b-2 focus:outline-none"
                     @blur="saveName"
                     @keydown.enter="($event.target as HTMLInputElement).blur()"
                 />
                 <h1
                 v-else
-                class="text-4xl font-extrabold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors px-2 py-1"
+                class="text-4xl font-extrabold text-gray-900 cursor-pointe transition-colors"
                 @click="startEditingName"
                 >
                 {{ profile.name }}
@@ -107,12 +107,12 @@ function handleAvatarUpload(event: Event) {
                     ref="bioInput"
                     :value="profile.bio"
                     rows="3"
-                    class="w-full text-start text-md text-gray-600 bg-transparent border border-blue-500 rounded-lg focus:outline-none resize-none px-3 py-2"
+                    class="w-full text-start text-md text-gray-600 bg-transparent border rounded-lg focus:outline-none resize-none"
                     @blur="saveBio"
                 />
                 <p
                     v-else
-                    class="text-md text-gray-600 cursor-pointer hover:text-blue-600 transition-colors px-3 py-2 rounded-lg hover:bg-gray-50"
+                    class="text-md text-gray-600 cursor-pointer transition-colors rounded-lg hover:bg-gray-50"
                     @click="startEditingBio"
                 >
                 {{ profile.bio || 'Cliquez pour ajouter une bio...' }}
@@ -121,7 +121,7 @@ function handleAvatarUpload(event: Event) {
         </div>
 
         <!-- Footer avec nom de l'app -->
-        <div class="p-4 h-16">
+        <div class="h-18">
             <div class="text-start">
                 <span class="text-xs text-gray-400 font-medium tracking-wide">
                     Nepo Bento

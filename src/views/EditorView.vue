@@ -5,11 +5,11 @@ import EditorGrid from '@/components/editor/EditorGrid.vue';
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#F9FAFB] flex p-2">
+  <div class="min-h-screen bg-[#F9FAFB] flex">
     <!-- Colonne gauche - Profil fixe -->
     <ProfileColumn />
     <!-- Zone principale - Grille de blocs éditables -->
-    <main class="flex-2 min-h-screen p-2">
+    <main class="flex-2 min-h-screen">
       <EditorGrid />
     </main>
     <!-- Barre d'outils flottante -->

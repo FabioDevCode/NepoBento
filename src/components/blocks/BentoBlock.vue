@@ -2,18 +2,13 @@
 import { computed } from 'vue';
 import type { Block } from '@/types';
 import { useBentoStore } from '@/stores/bento';
-import { 
-  Link, 
-  Twitter, 
-  Instagram, 
-  Linkedin, 
-  Github, 
-  Youtube, 
-  Facebook,
-  Image as ImageIcon,
-  Share2,
-  Trash2,
-} from 'lucide-vue-next';
+import { Trash2 } from 'lucide-vue-next';
+
+// Composants de blocs
+import LinkBlock from './LinkBlock.vue';
+import TitleBlock from './TitleBlock.vue';
+import TextBlock from './TextBlock.vue';
+import ImageBlock from './ImageBlock.vue';
 
 const props = defineProps<{
   block: Block;
@@ -35,16 +30,19 @@ const blockStyle = computed(() => ({
   borderRadius: props.block.style?.borderRadius || store.theme.borderRadius,
 }));
 
-const socialIcon = computed(() => {
-  const platform = props.block.content.platform;
-  switch (platform) {
-    case 'twitter': return Twitter;
-    case 'instagram': return Instagram;
-    case 'linkedin': return Linkedin;
-    case 'github': return Github;
-    case 'youtube': return Youtube;
-    case 'facebook': return Facebook;
-    default: return Share2;
+// Composant à afficher en fonction du type de bloc
+const blockComponent = computed(() => {
+  switch (props.block.type) {
+    case 'link':
+      return LinkBlock;
+    case 'title':
+      return TitleBlock;
+    case 'text':
+      return TextBlock;
+    case 'image':
+      return ImageBlock;
+    default:
+      return LinkBlock;
   }
 });
 
@@ -83,55 +81,8 @@ function handleClick() {
       </button>
     </div>
 
-    <!-- Contenu du bloc selon le type -->
-    <div class="block-content h-full w-full flex items-center" :class="{
-      'flex-row justify-start gap-3': block.type === 'link' || block.type === 'social',
-      'flex-col justify-center text-center': block.type === 'image',
-      'flex-col justify-start': block.type === 'text',
-      'flex-row justify-start': block.type === 'title'
-    }">
-      <!-- Link -->
-      <template v-if="block.type === 'link'">
-        <div class="w-10 h-10 shrink-0 rounded-xl bg-gray-100 flex items-center justify-center">
-          <Link class="w-5 h-5 text-gray-600" />
-        </div>
-        <span class="font-medium text-gray-900 text-sm">{{ block.content.title || 'Lien' }}</span>
-      </template>
-
-      <!-- Social -->
-      <template v-else-if="block.type === 'social'">
-        <div class="w-10 h-10 shrink-0 rounded-xl bg-gray-100 flex items-center justify-center">
-          <component :is="socialIcon" class="w-5 h-5 text-gray-700" />
-        </div>
-        <span class="text-sm text-gray-700">{{ block.content.username || block.content.platform || 'Social' }}</span>
-      </template>
-
-      <!-- Text -->
-      <template v-else-if="block.type === 'text'">
-        <div class="w-full h-full text-left overflow-auto">
-          <p class="text-sm text-gray-600">{{ block.content.text || 'Votre texte ici...' }}</p>
-        </div>
-      </template>
-
-      <!-- Title -->
-      <template v-else-if="block.type === 'title'">
-        <h2 class="w-full text-left font-bold text-gray-900 text-xl">{{ block.content.title || 'Titre' }}</h2>
-      </template>
-
-      <!-- Image -->
-      <template v-else-if="block.type === 'image'">
-        <img 
-          v-if="block.content.src"
-          :src="block.content.src"
-          :alt="block.content.alt || 'Image'"
-          class="w-full h-full object-cover"
-        />
-        <div v-else class="flex flex-col items-center text-gray-400">
-          <ImageIcon class="w-10 h-10 mb-2" />
-          <span class="text-xs">Image</span>
-        </div>
-      </template>
-    </div>
+    <!-- Contenu du bloc (composant dynamique) -->
+    <component :is="blockComponent" :block="block" class="h-full w-full" />
   </div>
 </template>
 
@@ -139,9 +90,5 @@ function handleClick() {
 .bento-block {
   min-height: 68px;
   border-radius: 12px;
-}
-
-.block-content {
-  padding: 10px;
 }
 </style>

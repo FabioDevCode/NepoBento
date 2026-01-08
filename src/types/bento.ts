@@ -1,7 +1,7 @@
 // Types pour l'éditeur Bento
 
 // Les blocs éditables (sans profile qui est géré séparément)
-export type BlockType = 'link' | 'social' | 'text' | 'image' | 'title';
+export type BlockType = 'link' | 'text' | 'image' | 'title';
 
 export interface Position {
   x: number;

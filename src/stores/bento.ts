@@ -255,7 +255,6 @@ export const useBentoStore = defineStore('bento', () => {
       case 'title':
         return { width: 4, height: 1 };
       case 'link':
-      case 'social':
         return { width: 2, height: 1 };
       default:
         return { width: 2, height: 1 };
@@ -268,13 +267,6 @@ export const useBentoStore = defineStore('bento', () => {
         return {
           title: 'Mon Lien',
           url: 'https://example.com',
-          icon: 'link',
-        };
-      case 'social':
-        return {
-          platform: 'twitter',
-          username: '',
-          url: '',
         };
       case 'text':
         return {

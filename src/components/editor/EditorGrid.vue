@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, nextTick } from 'vue';
 import draggable from 'vuedraggable';
 import { useBentoStore } from '@/stores/bento';
+import { storeToRefs } from 'pinia';
 import BentoBlock from '@/components/blocks/BentoBlock.vue';
 import { Plus } from 'lucide-vue-next';
 import type { Block } from '@/types';
 
 const store = useBentoStore();
+const { blocks: storeBlocks } = storeToRefs(store);
 
 // Type pour les cellules de la grille (bloc réel ou placeholder)
 interface GridCell {
@@ -18,16 +20,18 @@ interface GridCell {
 }
 
 // Copie locale des blocs pour le drag & drop
-const localBlocks = ref<Block[]>([...store.blocks]);
+const localBlocks = ref<Block[]>([]);
 
 // Synchroniser quand le store change (ajout, suppression, etc.)
-watch(() => store.blocks, (newBlocks) => {
+watch(storeBlocks, (newBlocks) => {
     localBlocks.value = [...newBlocks];
 }, { deep: true, immediate: true });
 
 // Surveiller aussi la longueur du tableau pour les suppressions complètes
-watch(() => store.blocks.length, () => {
-    localBlocks.value = [...store.blocks];
+watch(() => storeBlocks.value.length, () => {
+    nextTick(() => {
+        localBlocks.value = [...storeBlocks.value];
+    });
 });
 
 // Calculer le nombre de rows occupées par les blocs
@@ -494,6 +498,6 @@ function getCellStyle(cell: GridCell) {
 }
 
 #grid {
-    padding: 60px;
+    padding: 60px 60px 60px 120px;
 }
 </style>
