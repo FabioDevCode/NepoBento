@@ -14,14 +14,6 @@ const routes: RouteRecordRaw[] = [
 			title: 'Nepo Bento - Éditeur',
 		},
 	},
-	{
-		path: '/preview',
-		name: 'Preview',
-		component: () => import('@/views/PreviewView.vue'),
-		meta: {
-			title: 'Nepo Bento - Aperçu',
-		},
-	},
 ];
 
 const router = createRouter({

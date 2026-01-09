@@ -440,9 +440,7 @@ function getCellStyle(cell: GridCell) {
                 <BentoBlock
                     v-if="element.type === 'block' && element.block"
                     :block="element.block"
-                    :is-selected="store.selectedBlockId === element.block.id"
                     class="h-full"
-                    @select="handleSelect(element.block.id)"
                     @delete="handleDelete(element.block.id)"
                 />
             </div>

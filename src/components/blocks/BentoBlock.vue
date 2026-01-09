@@ -10,25 +10,43 @@ import TitleBlock from './TitleBlock.vue';
 import TextBlock from './TextBlock.vue';
 import ImageBlock from './ImageBlock.vue';
 
+// Configuration des styles de conteneur
+import { getBlockContainerStyle } from './blockStyles';
+
 const props = defineProps<{
   block: Block;
-  isSelected?: boolean;
-  isPreview?: boolean;
 }>();
 
 const emit = defineEmits<{
-  (e: 'select'): void;
   (e: 'delete'): void;
 }>();
 
 const store = useBentoStore();
 
+// Récupérer la configuration de style pour ce type de bloc
+const containerConfig = computed(() => getBlockContainerStyle(props.block.type));
+
 const blockStyle = computed(() => ({
   gridColumn: `span ${props.block.size.width}`,
   gridRow: `span ${props.block.size.height}`,
-  backgroundColor: props.block.style?.backgroundColor || '#ffffff',
+  backgroundColor: containerConfig.value.noBackground
+    ? 'transparent'
+    : (props.block.style?.backgroundColor || '#ffffff'),
   borderRadius: props.block.style?.borderRadius || store.theme.borderRadius,
+  ...containerConfig.value.style,
 }));
+
+// Classes dynamiques basées sur la configuration du bloc
+const containerClasses = computed(() => {
+  const config = containerConfig.value;
+  return [
+    config.classes || '',
+    {
+      'border border-gray-100': !config.noBorder,
+      'border-0': config.noBorder,
+    }
+  ];
+});
 
 // Composant à afficher en fonction du type de bloc
 const blockComponent = computed(() => {
@@ -45,34 +63,19 @@ const blockComponent = computed(() => {
       return LinkBlock;
   }
 });
-
-function handleClick() {
-  if (!props.isPreview) {
-    emit('select');
-  } else if (props.block.content.url) {
-    window.open(props.block.content.url, '_blank');
-  }
-}
 </script>
 
 <template>
-  <div 
-    class="bento-block group relative bg-white border border-gray-100 shadow-sm transition-all duration-200 overflow-hidden"
-    :class="{
-      'ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-50': isSelected,
-      'hover:shadow-md hover:border-gray-200 cursor-grab active:cursor-grabbing': !isSelected && !isPreview,
-      'cursor-grab active:cursor-grabbing': isSelected && !isPreview,
-      'cursor-pointer hover:scale-[1.02] hover:shadow-lg': isPreview,
-    }"
+  <div
+    class="group relative min-h-17 rounded-xl hover:ring-1 hover:ring-gray-900 hover:ring-offset-2 hover:ring-offset-gray-50 hover:shadow-md cursor-grab active:cursor-grabbing transition-all duration-150"
+    :class="[containerClasses]"
     :style="blockStyle"
-    @click="handleClick"
   >
-    <!-- Actions (mode éditeur) -->
-    <div 
-      v-if="!isPreview && isSelected"
-      class="absolute top-2 right-2 flex gap-1 z-10"
+    <!-- Actions (visible au hover) -->
+    <div
+      class="absolute top-2 right-2 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
     >
-      <button 
+      <button
         class="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 transition-colors"
         @click.stop="emit('delete')"
         title="Supprimer"
@@ -85,10 +88,3 @@ function handleClick() {
     <component :is="blockComponent" :block="block" class="h-full w-full" />
   </div>
 </template>
-
-<style scoped>
-.bento-block {
-  min-height: 68px;
-  border-radius: 12px;
-}
-</style>

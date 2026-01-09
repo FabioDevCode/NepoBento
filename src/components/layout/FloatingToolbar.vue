@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
 import { useBentoStore } from '@/stores/bento';
 import { useBentoStorage } from '@/composables';
 import {
@@ -10,7 +9,6 @@ import {
     Image as ImageIcon,
     Download,
     Upload,
-    Eye,
     RotateCcw,
     Trash2,
     Check,
@@ -18,7 +16,6 @@ import {
 } from 'lucide-vue-next';
 import type { BlockType } from '@/types';
 
-const router = useRouter();
 const store = useBentoStore();
 const { exportToFile, importFromFile, reset, error } = useBentoStorage();
 
@@ -34,10 +31,6 @@ const blockTypes: { type: BlockType; label: string; icon: typeof Link }[] = [
 
 function addBlock(type: BlockType) {
     store.addBlock(type);
-}
-
-function goToPreview() {
-    router.push('/preview');
 }
 
 async function handleExport() {
@@ -153,17 +146,6 @@ function showNotification(type: 'success' | 'error', message: string) {
                     <Trash2 class="w-4 h-4" />
                 </button>
             </div>
-
-            <!-- Séparateur -->
-            <div class="w-px h-full bg-gray-200 mx-2" />
-
-            <button
-                @click="goToPreview"
-                class="tooltip flex items-center justify-center rounded-md bg-gray-900 hover:bg-gray-800 text-white transition-all duration-150"
-                data-tooltip="Aperçu"
-            >
-                <Eye class="w-4 h-4" />
-            </button>
         </div>
 
         <!-- Notification -->

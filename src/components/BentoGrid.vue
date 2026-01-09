@@ -76,8 +76,6 @@ function handleDuplicate(id: string) {
         <template #item="{ element }">
           <BentoBlock 
             :block="element"
-            :is-selected="store.selectedBlockId === element.id"
-            @select="handleSelect(element.id)"
             @delete="handleDelete(element.id)"
             @duplicate="handleDuplicate(element.id)"
           />
