@@ -16,20 +16,24 @@ export interface BlockContainerStyle {
 // Configuration des styles par type de bloc
 export const blockContainerStyles: Record<BlockType, BlockContainerStyle> = {
     link: {
-        classes: 'bg-white shadow-sm transition-all duration-200 overflow-hidden',
+        classes: 'bg-white shadow-sm transition-all duration-200',
     },
     title: {
-        classes: 'flex items-center bg-transparent',
+        classes: 'flex items-center bg-transparent transition-all duration-200',
         noBackground: true
     },
     text: {
-        classes: 'bg-white shadow-sm transition-all duration-200 overflow-hidden',
+        classes: 'bg-white shadow-sm transition-all duration-200',
     },
     image: {
-        classes: 'bg-white shadow-sm transition-all duration-200 overflow-hidden'
+        classes: 'bg-white shadow-sm transition-all duration-200'
         // noPadding: true,
         // noBackground: true,
         // noBorder: true,
+    },
+    map: {
+        classes: 'bg-white shadow-sm transition-all duration-200',
+        noPadding: true,
     },
 };
 

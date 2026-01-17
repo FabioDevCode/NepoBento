@@ -9,7 +9,7 @@ defineProps<{
 
 <template>
   <div class="flex flex-col items-center justify-center h-full w-full">
-    <img 
+    <img
       v-if="block.content.src"
       :src="block.content.src"
       :alt="block.content.alt || 'Image'"

@@ -7,6 +7,7 @@ import {
     Type,
     Heading2,
     Image as ImageIcon,
+    MapPin,
     Download,
     Upload,
     RotateCcw,
@@ -27,6 +28,7 @@ const blockTypes: { type: BlockType; label: string; icon: typeof Link }[] = [
     { type: 'title', label: 'Titre', icon: Heading2 },
     { type: 'text', label: 'Texte', icon: Type },
     { type: 'image', label: 'Image', icon: ImageIcon },
+    { type: 'map', label: 'Carte', icon: MapPin },
 ];
 
 function addBlock(type: BlockType) {

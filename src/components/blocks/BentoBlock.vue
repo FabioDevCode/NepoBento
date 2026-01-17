@@ -9,6 +9,7 @@ import LinkBlock from './LinkBlock.vue';
 import TitleBlock from './TitleBlock.vue';
 import TextBlock from './TextBlock.vue';
 import ImageBlock from './ImageBlock.vue';
+import MapBlock from './MapBlock.vue';
 
 // Configuration des styles de conteneur
 import { getBlockContainerStyle } from './blockStyles';
@@ -59,6 +60,8 @@ const blockComponent = computed(() => {
       return TextBlock;
     case 'image':
       return ImageBlock;
+    case 'map':
+      return MapBlock;
     default:
       return LinkBlock;
   }
@@ -67,16 +70,16 @@ const blockComponent = computed(() => {
 
 <template>
   <div
-    class="group relative min-h-17 rounded-xl hover:ring-1 hover:ring-gray-900 hover:ring-offset-2 hover:ring-offset-gray-50 hover:shadow-md cursor-grab active:cursor-grabbing transition-all duration-150"
+    class="group relative min-h-17 rounded-xl hover:bg-white hover:ring-1 hover:ring-gray-900 hover:ring-offset-2 hover:ring-offset-gray-50 hover:shadow-md cursor-grab active:cursor-grabbing transition-all duration-150"
     :class="[containerClasses]"
     :style="blockStyle"
   >
     <!-- Actions (visible au hover) -->
     <div
-      class="absolute top-2 right-2 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+      class="absolute -top-3 -right-3 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
     >
       <button
-        class="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 transition-colors"
+        class="p-1.5 cursor-pointer rounded-lg bg-red-100 text-red-500 ring-1 ring-red-500 transition-colors"
         @click.stop="emit('delete')"
         title="Supprimer"
       >

@@ -123,7 +123,12 @@ export const useBentoStore = defineStore('bento', () => {
     if (index !== -1) {
       const block = config.value.blocks[index];
       if (block) {
-        Object.assign(block, updates);
+        // Mise à jour réactive en remplaçant le bloc entier
+        config.value.blocks[index] = {
+          ...block,
+          ...updates,
+          content: updates.content ? { ...block.content, ...updates.content } : block.content,
+        };
       }
     }
   }
@@ -134,6 +139,75 @@ export const useBentoStore = defineStore('bento', () => {
       config.value.blocks.splice(index, 1);
       if (selectedBlockId.value === id) {
         selectedBlockId.value = null;
+      }
+      // Compacter les blocs vers le haut après suppression
+      compactBlocksUp();
+    }
+  }
+
+  // Compacter les blocs vers le haut pour combler les espaces vides
+  function compactBlocksUp(): void {
+    const columns = config.value.grid.columns;
+    const blocks = config.value.blocks;
+
+    if (blocks.length === 0) return;
+
+    let hasChanges = true;
+    let iterations = 0;
+    const maxIterations = 100;
+
+    while (hasChanges && iterations < maxIterations) {
+      hasChanges = false;
+      iterations++;
+
+      // Trier les blocs par position Y (du plus haut au plus bas)
+      const sortedBlocks = [...blocks].sort((a, b) => a.position.y - b.position.y || a.position.x - b.position.x);
+
+      for (const block of sortedBlocks) {
+        if (block.position.y === 0) continue;
+
+        // Essayer de remonter le bloc le plus haut possible
+        let bestY = block.position.y;
+
+        // Tester chaque position de Y=0 jusqu'à la position actuelle
+        for (let testY = 0; testY < block.position.y; testY++) {
+          // Vérifier s'il y a collision avec d'autres blocs
+          let canMove = true;
+
+          for (const otherBlock of blocks) {
+            if (otherBlock.id === block.id) continue;
+
+            // Vérifier le chevauchement
+            const testLeft = block.position.x;
+            const testRight = block.position.x + block.size.width;
+            const testTop = testY;
+            const testBottom = testY + block.size.height;
+
+            const otherLeft = otherBlock.position.x;
+            const otherRight = otherBlock.position.x + otherBlock.size.width;
+            const otherTop = otherBlock.position.y;
+            const otherBottom = otherBlock.position.y + otherBlock.size.height;
+
+            const overlapsX = testLeft < otherRight && testRight > otherLeft;
+            const overlapsY = testTop < otherBottom && testBottom > otherTop;
+
+            if (overlapsX && overlapsY) {
+              canMove = false;
+              break;
+            }
+          }
+
+          if (canMove) {
+            bestY = testY;
+            break; // On prend la position la plus haute possible
+          }
+        }
+
+        // Si on peut remonter, mettre à jour la position
+        if (bestY < block.position.y) {
+          block.position.y = bestY;
+          hasChanges = true;
+        }
       }
     }
   }
@@ -250,6 +324,8 @@ export const useBentoStore = defineStore('bento', () => {
     switch (type) {
       case 'image':
         return { width: 2, height: 4 };
+      case 'map':
+        return { width: 2, height: 4 };
       case 'text':
         return { width: 2, height: 4 };
       case 'title':
@@ -280,6 +356,12 @@ export const useBentoStore = defineStore('bento', () => {
         return {
           src: '',
           alt: 'Image',
+        };
+      case 'map':
+        return {
+          lat: 50,
+          lng: 10,
+          zoom: 4,
         };
       default:
         return {};
