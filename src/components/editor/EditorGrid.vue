@@ -416,6 +416,10 @@ function handleSelect(id: string) {
 
 function handleDelete(id: string) {
     store.deleteBlock(id);
+    // Forcer la synchronisation après suppression
+    setTimeout(() => {
+        syncFromStore();
+    }, 50);
 }
 
 // Style pour positionner chaque cellule dans la grille
