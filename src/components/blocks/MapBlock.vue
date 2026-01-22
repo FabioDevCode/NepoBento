@@ -64,7 +64,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="map-container w-full h-full rounded-lg overflow-hidden">
+  <div class="map-container w-full h-full rounded-xl overflow-hidden">
     <VMap
       ref="mapRef"
       :center="center"

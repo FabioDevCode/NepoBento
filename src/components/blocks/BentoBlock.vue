@@ -70,10 +70,15 @@ const blockComponent = computed(() => {
 
 <template>
   <div
-    class="group relative min-h-17 rounded-xl hover:bg-white hover:ring-1 hover:ring-gray-900 hover:ring-offset-2 hover:ring-offset-gray-50 hover:shadow-md cursor-grab active:cursor-grabbing transition-all duration-150"
+    class="group relative min-h-17 rounded-xl hover:bg-white hover:ring-1 hover:ring-gray-900 hover:ring-offset-2 hover:ring-offset-gray-50 hover:shadow-md transition-all duration-150"
     :class="[containerClasses]"
     :style="blockStyle"
   >
+    <!-- Handle de drag (zone pour saisir le bloc) -->
+    <div
+      class="drag-handle absolute inset-0 z-5 cursor-grab active:cursor-grabbing"
+    />
+
     <!-- Actions (visible au hover) -->
     <div
       class="absolute -top-3 -right-3 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
@@ -88,6 +93,6 @@ const blockComponent = computed(() => {
     </div>
 
     <!-- Contenu du bloc (composant dynamique) -->
-    <component :is="blockComponent" :block="block" class="h-full w-full" />
+    <component :is="blockComponent" :block="block" class="h-full w-full relative z-1" />
   </div>
 </template>

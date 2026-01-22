@@ -8,14 +8,14 @@ defineProps<{
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center h-full w-full">
+  <div class="h-full w-full rounded-xl overflow-hidden">
     <img
       v-if="block.content.src"
       :src="block.content.src"
       :alt="block.content.alt || 'Image'"
       class="w-full h-full object-cover"
     />
-    <div v-else class="flex flex-col items-center text-gray-400 p-3">
+    <div v-else class="flex flex-col items-center justify-center h-full w-full text-gray-400 p-3">
       <ImageIcon class="w-10 h-10 mb-2" />
       <span class="text-xs">Image</span>
     </div>

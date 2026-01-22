@@ -21,6 +21,7 @@ const store = useBentoStore();
 const { exportToFile, importFromFile, reset, error } = useBentoStorage();
 
 const fileInput = ref<HTMLInputElement | null>(null);
+const imageInput = ref<HTMLInputElement | null>(null);
 const notification = ref<{ type: 'success' | 'error'; message: string } | null>(null);
 
 const blockTypes: { type: BlockType; label: string; icon: typeof Link }[] = [
@@ -32,7 +33,67 @@ const blockTypes: { type: BlockType; label: string; icon: typeof Link }[] = [
 ];
 
 function addBlock(type: BlockType) {
+    // Cas spécial pour les images : ouvrir le sélecteur de fichier
+    if (type === 'image') {
+        imageInput.value?.click();
+        return;
+    }
     store.addBlock(type);
+}
+
+async function handleImageSelect(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) return;
+
+    // Vérifier que c'est bien une image
+    if (!file.type.startsWith('image/')) {
+        showNotification('error', 'Veuillez sélectionner une image valide');
+        input.value = '';
+        return;
+    }
+
+    // Limiter la taille (5 Mo max pour éviter les problèmes de localStorage)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+        showNotification('error', 'L\'image est trop volumineuse (max 5 Mo)');
+        input.value = '';
+        return;
+    }
+
+    try {
+        // Convertir l'image en base64
+        const base64 = await fileToBase64(file);
+
+        // Créer le bloc image avec la source base64 directement
+        store.addBlockWithContent('image', {
+            src: base64,
+            alt: file.name.replace(/\.[^/.]+$/, '') // Nom sans extension
+        });
+
+        showNotification('success', 'Image ajoutée !');
+        
+        // Recharger la page pour afficher le bloc
+        setTimeout(() => {
+            window.location.reload();
+        }, 300);
+    } catch (err) {
+        showNotification('error', 'Erreur lors du chargement de l\'image');
+        console.error(err);
+    }
+
+    // Réinitialiser l'input
+    input.value = '';
+}
+
+function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
 }
 
 async function handleExport() {
@@ -114,6 +175,14 @@ function showNotification(type: 'success' | 'error', message: string) {
                     accept=".json"
                     class="hidden"
                     @change="handleImport"
+                />
+                
+                <input
+                    ref="imageInput"
+                    type="file"
+                    accept="image/*"
+                    class="hidden"
+                    @change="handleImageSelect"
                 />
 
                 <button

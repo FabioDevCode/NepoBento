@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { computed, ref, watch, nextTick } from 'vue';
+import { computed, ref, watch, nextTick, shallowRef } from 'vue';
 import draggable from 'vuedraggable';
 import { useBentoStore } from '@/stores/bento';
-import { storeToRefs } from 'pinia';
 import BentoBlock from '@/components/blocks/BentoBlock.vue';
 import { Plus } from 'lucide-vue-next';
 import type { Block } from '@/types';
 
 const store = useBentoStore();
-const { blocks: storeBlocks } = storeToRefs(store);
+
+// Clé pour forcer le re-render du draggable
+const draggableKey = ref(0);
 
 // Type pour les cellules de la grille (bloc réel ou placeholder)
 interface GridCell {
@@ -20,19 +21,34 @@ interface GridCell {
 }
 
 // Copie locale des blocs pour le drag & drop
-const localBlocks = ref<Block[]>([]);
+const localBlocks = shallowRef<Block[]>([]);
 
-// Synchroniser quand le store change (ajout, suppression, etc.)
-watch(storeBlocks, (newBlocks) => {
-    localBlocks.value = [...newBlocks];
-}, { deep: true, immediate: true });
+// Fonction pour mettre à jour localBlocks depuis le store
+function syncFromStore() {
+    // Accéder directement aux blocs du store
+    const storeBlocksArray = store.blocks;
+    // Créer une copie profonde
+    localBlocks.value = storeBlocksArray.map(b => ({
+        ...b,
+        position: { ...b.position },
+        size: { ...b.size },
+        content: b.content ? { ...b.content } : {},
+    }));
+    // Forcer le re-render
+    draggableKey.value++;
+}
 
-// Surveiller aussi la longueur du tableau pour les suppressions complètes
-watch(() => storeBlocks.value.length, () => {
-    nextTick(() => {
-        localBlocks.value = [...storeBlocks.value];
-    });
-});
+// Synchroniser au démarrage
+syncFromStore();
+
+// Watch profond sur les blocs du store
+watch(
+    () => store.blocks,
+    () => {
+        nextTick(syncFromStore);
+    },
+    { deep: true }
+);
 
 // Calculer le nombre de rows occupées par les blocs
 const occupiedRows = computed(() => {
@@ -379,6 +395,11 @@ function onDragEnd(evt: any) {
             }
         }
     });
+
+    // Forcer la synchronisation immédiate
+    setTimeout(() => {
+        syncFromStore();
+    }, 50);
 }
 
 const gridStyle = computed(() => ({
@@ -421,12 +442,14 @@ function getCellStyle(cell: GridCell) {
         <!-- Mode Éditeur avec drag & drop -->
         <draggable
             v-if="localBlocks.length > 0"
+            :key="draggableKey"
             v-model="localCells"
             item-key="id"
             :style="gridStyle"
             ghost-class="ghost"
             chosen-class="chosen"
             drag-class="drag"
+            handle=".drag-handle"
             :filter="'.placeholder-cell'"
             :preventOnFilter="false"
             animation="200"

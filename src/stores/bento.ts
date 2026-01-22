@@ -65,7 +65,7 @@ export const useBentoStore = defineStore('bento', () => {
   function findFirstAvailablePosition(blockSize: Size): Position {
     const columns = config.value.grid.columns;
     const blocks = config.value.blocks;
-    
+
     // Créer une map des cellules occupées
     const occupiedCells = new Set<string>();
     blocks.forEach(block => {
@@ -75,7 +75,7 @@ export const useBentoStore = defineStore('bento', () => {
         }
       }
     });
-    
+
     // Chercher la première position où le bloc peut rentrer
     for (let row = 0; row < 100; row++) { // Limite raisonnable
       for (let col = 0; col <= columns - blockSize.width; col++) {
@@ -93,9 +93,9 @@ export const useBentoStore = defineStore('bento', () => {
         }
       }
     }
-    
+
     // Fallback: mettre en dessous de tout
-    const maxY = blocks.length > 0 
+    const maxY = blocks.length > 0
       ? Math.max(...blocks.map(b => b.position.y + b.size.height))
       : 0;
     return { x: 0, y: maxY };
@@ -105,7 +105,6 @@ export const useBentoStore = defineStore('bento', () => {
   function addBlock(type: BlockType, position?: Position, size?: Size): Block {
     const blockSize = size || getDefaultSizeForType(type);
     const blockPosition = position || findFirstAvailablePosition(blockSize);
-    
     const newBlock: Block = {
       id: generateId(),
       type,
@@ -113,7 +112,25 @@ export const useBentoStore = defineStore('bento', () => {
       size: blockSize,
       content: getDefaultContentForType(type),
     };
-    config.value.blocks.push(newBlock);
+    // Réassigner le tableau pour forcer la réactivité
+    config.value.blocks = [...config.value.blocks, newBlock];
+    selectedBlockId.value = newBlock.id;
+    return newBlock;
+  }
+
+  // Ajouter un bloc avec du contenu personnalisé (pour éviter les problèmes de réactivité)
+  function addBlockWithContent(type: BlockType, content: Block['content'], position?: Position, size?: Size): Block {
+    const blockSize = size || getDefaultSizeForType(type);
+    const blockPosition = position || findFirstAvailablePosition(blockSize);
+    const newBlock: Block = {
+      id: generateId(),
+      type,
+      position: blockPosition,
+      size: blockSize,
+      content: { ...getDefaultContentForType(type), ...content },
+    };
+    // Réassigner le tableau pour forcer la réactivité
+    config.value.blocks = [...config.value.blocks, newBlock];
     selectedBlockId.value = newBlock.id;
     return newBlock;
   }
@@ -234,9 +251,26 @@ export const useBentoStore = defineStore('bento', () => {
   }
 
   function updateBlockPosition(id: string, position: Position): void {
-    const block = config.value.blocks.find(b => b.id === id);
-    if (block) {
-      block.position = { ...position };
+    const index = config.value.blocks.findIndex(b => b.id === id);
+    if (index !== -1) {
+      const block = config.value.blocks[index];
+      if (block) {
+        // Créer un nouveau bloc avec la nouvelle position
+        const updatedBlock: Block = {
+          id: block.id,
+          type: block.type,
+          position: { ...position },
+          size: block.size,
+          content: block.content,
+          style: block.style,
+        };
+        // Réassigner le tableau entier pour déclencher la réactivité
+        config.value.blocks = [
+          ...config.value.blocks.slice(0, index),
+          updatedBlock,
+          ...config.value.blocks.slice(index + 1),
+        ];
+      }
     }
   }
 
@@ -373,7 +407,6 @@ export const useBentoStore = defineStore('bento', () => {
     config,
     selectedBlockId,
     isDragging,
-    
     // Getters
     blocks,
     theme,
@@ -381,35 +414,29 @@ export const useBentoStore = defineStore('bento', () => {
     metadata,
     profile,
     selectedBlock,
-    
     // Actions - Blocs
     addBlock,
+    addBlockWithContent,
     updateBlock,
     deleteBlock,
     duplicateBlock,
     reorderBlocks,
     updateBlockPosition,
-    
     // Actions - Profile
     updateProfile,
     resetProfile,
-    
     // Actions - Thème
     updateTheme,
     resetTheme,
-    
     // Actions - Grille
     updateGrid,
     resetGrid,
-    
     // Actions - Metadata
     updateMetadata,
-    
     // Actions - Import/Export
     exportConfig,
     importConfig,
     resetConfig,
-    
     // Sélection
     selectBlock,
     clearSelection,

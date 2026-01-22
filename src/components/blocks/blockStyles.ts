@@ -26,10 +26,8 @@ export const blockContainerStyles: Record<BlockType, BlockContainerStyle> = {
         classes: 'bg-white shadow-sm transition-all duration-200',
     },
     image: {
-        classes: 'bg-white shadow-sm transition-all duration-200'
-        // noPadding: true,
-        // noBackground: true,
-        // noBorder: true,
+        classes: 'bg-white shadow-sm transition-all duration-200',
+        noPadding: true,
     },
     map: {
         classes: 'bg-white shadow-sm transition-all duration-200',
